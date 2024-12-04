@@ -4,121 +4,26 @@
 #include <string>
 
 std::vector<std::string> split(const std::string& s, char delimiter);
+std::vector<std::string> getFileLines(const std::string& filename);
+int getSafeLevelCount(const std::vector<std::string>& fileLines); // Part 1
+int getDampendSafeLevelCount(const std::vector<std::string>& fileLines); // Part 2
 
 int main()
 {
-  std::string fileName = "input.txt";
-  std::ifstream file(fileName);
+  std::vector<std::string> fileLines = getFileLines("input.txt");
 
-  if (!file)
+  if (fileLines.size() == 0)
   {
-    std::cout << "Failed to open input file\n";
+    std::cout << "NO INPUT DATA FOUND!\n";
     return EXIT_FAILURE;
   }
 
-  std::string line;
-  std::vector< std::vector<int> > levels;
-
-  while (std::getline(file, line))
-  { 
-    std::vector<std::string> nums = split(line, ' ');
-
-    std::vector<int> level;
-    for (int i = 0; i < nums.size(); i++)
-    {
-      int num = stoi(nums[i]);
-      level.push_back(num);
-    }
-
-    levels.push_back(level);
-  }
-  file.close();
-
   // part 1
-  int safeCount = 0;
-  for (int i = 0; i < levels.size(); i++)
-  {
-    std::vector<int> nums = levels[i];
-
-    std::cout << "Inspecting level " << i << "\n";
-
-    bool isDecreasing = true;
-    if (nums[0] < nums[1])
-    {
-      isDecreasing = false;
-    }
-
-    std::cout << "should be decreasing " << isDecreasing << "\n";
-
-    int previous = -1;
-    bool hasFailedOnce = false;
-    for (int j = 0; j < nums.size(); j++)
-    {
-      int current = nums[j];
-
-
-         std::cout << "Previous: " << previous << ", " << "Current: " << current << "\n";
-
-      if (previous == -1)
-      {
-        previous = current;
-      }
-      else 
-      {
-        int delta = std::abs(current - previous);
-
-        if ((isDecreasing && current > previous) || (!isDecreasing && current < previous) || current == previous || (delta < 1 || delta > 3))
-        {
-
-          if (hasFailedOnce) {
-            std::cout << "SECOND FAILURE\n";
-            break;
-          } else {
-            std::cout << "FIRST FAILURE at" << j << "\n";
-            hasFailedOnce = true;
-            //previous = current;
-
-            if (j == 1) {
-              std::cout << "recalculating decresing state\n";
-              isDecreasing = nums[0] > nums[2];
-              
-            }
-            // Recaclulate trend
-            //
-            if (j == nums.size() - 1)
-            {
-              std::cout << "INCREMENTING SAFE COUNT\n";
-              safeCount++;
-            }
-            std::cout << "CONTINUE\n";
-            continue; // keep previous value the same!
-          }
-
-
-
-          //break;
-        }
-
-        
-        if (j == nums.size() - 1)
-        {
-          std::cout << "INCREMENTING SAFE COUNT\n";
-          safeCount++;
-        }
-
-        // Keep going! So far so good if here!
-        std::cout << "UPDATING PREVIOUS\n";
-        previous = current;
-      }
-    }
-  }
-
+  int safeCount = getSafeLevelCount(fileLines);
   std::cout << "SAFE COUNT: " << safeCount << "\n";
   
   return EXIT_SUCCESS;
 }
-
-
 
 std::vector<std::string> split(const std::string& s, char delimiter)
 {
@@ -145,4 +50,162 @@ std::vector<std::string> split(const std::string& s, char delimiter)
   }
 
   return result;
+}
+
+std::vector<std::string> getFileLines(const std::string& filename)
+{
+  std::ifstream file(filename);
+  std::vector<std::string> lines;
+
+  if (!file)
+  {
+    std::cout << "FAILED OPENING FILE: " << filename << "\n";
+    return lines;
+  }
+  
+  std::string line;
+  while (std::getline(file, line))
+  { 
+    lines.push_back(line);
+  }
+
+  file.close();
+
+  return lines;
+}
+
+int getSafeLevelCount(const std::vector<std::string>& fileLines)
+{
+  int safeCount = 0;
+  for (int i = 0; i < fileLines.size(); i++)
+  {
+    std::string line = fileLines[i];
+    std::vector<std::string> components = split(line, ' ');
+    std::vector<int> nums;
+
+    for (std::string component : components)
+    {
+      nums.push_back(stoi(component));
+    }
+
+    std::cout << "Inspecting level " << i << "\n";
+
+    bool isDecreasing = nums[0] > nums[1];
+
+    if (isDecreasing)
+    {
+       std::cout << "This level should be DECREASING!\n";
+    }
+    else
+    {
+      std::cout << "This level should be INCREASING!\n";  
+    }
+
+    int previous = -1;
+    for (int j = 0; j < nums.size(); j++)
+    {
+      int current = nums[j];
+
+      std::cout << "INSPECTING: " << current << "\n";
+      if (previous == -1)
+      {
+        previous = current;
+      }
+      else 
+      {
+        std::cout << "PREVIOUS: " << previous << "\n";
+        int delta = std::abs(current - previous);
+        std::cout << "DELTA: " << delta << "\n";
+
+        if ((isDecreasing && current > previous) || (!isDecreasing && current < previous) || current == previous || (delta < 1 || delta > 3))
+        {
+          std::cout << "LEVEL FAILED!\n";
+          break;
+        }
+        
+        if (j == nums.size() - 1)
+        {
+          std::cout << "INCREMENTING SAFE COUNT\n";
+          safeCount++;
+        }
+
+        // Keep going! So far so good if here!
+        std::cout << "PREVIOUS = " << current << "\n";
+        previous = current;
+      }
+    }
+  }
+
+  return safeCount;
+}
+
+
+int getDampendSafeLevelCount(const std::vector<std::string>& fileLines)
+{
+  int safeCount = 0;
+  for (int i = 0; i < fileLines.size(); i++)
+  {
+    std::string line = fileLines[i];
+    std::vector<std::string> components = split(line, ' ');
+    std::vector<int> nums;
+
+    std::cout << "Inspecting level " << i << "\n";
+
+    for (std::string component : components)
+    {
+      nums.push_back(stoi(component));
+      std::cout << component << " ";
+    }
+    std::cout << "\n";
+
+    bool isDecreasing = nums[0] > nums[1];
+
+    if (isDecreasing)
+    {
+       std::cout << "This level should be DECREASING!\n";
+    }
+    else
+    {
+      std::cout << "This level should be INCREASING!\n";  
+    }
+
+    int previous = -1;
+    for (int j = 0; j < nums.size(); j++)
+    {
+      int current = nums[j];
+
+      std::cout << "INSPECTING: " << current << "\n";
+      if (previous == -1)
+      {
+        previous = current;
+      }
+      else 
+      {
+        std::cout << "PREVIOUS: " << previous << "\n";
+        int delta = std::abs(current - previous);
+        std::cout << "DELTA: " << delta << "\n";
+
+        if ((isDecreasing && current > previous) || (!isDecreasing && current < previous) || current == previous || (delta < 1 || delta > 3))
+        {
+          std::cout << "LEVEL FAILED!\n";
+          break;
+        }
+        
+        if (j == nums.size() - 1)
+        {
+          std::cout << "INCREMENTING SAFE COUNT\n";
+          safeCount++;
+        }
+
+        // Keep going! So far so good if here!
+        std::cout << "PREVIOUS = " << current << "\n";
+        previous = current;
+      }
+    }
+  }
+
+  return safeCount;
+
+
+
 }
