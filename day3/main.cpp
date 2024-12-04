@@ -198,6 +198,13 @@ int getCondtionalProductSum(const std::string& fileContents)
     bool isInValidRange = false;
 
     // Guard that position is valid!
+    // THE BELOW WONT WORK!!!!!!!! ITS THE MOST RECENT THAT MATTERS!
+    
+    // TODO: FIX RANGE SOLUTION!
+    // LOOK AT MATCH POSTION
+    // ITERATE DONTS FIND THE CLOSEST THAT IS LESS THAN
+    // ITERATE DOS FIND THE CLOSEST THAT IS LESS THAN
+    // IF DONT IS CLOSER JUST CONTINUE TO NEXT ITERATION!
     for (Range range : validRanges)
     {
       if (matchPosition > range.start && matchPosition < range.end) 
