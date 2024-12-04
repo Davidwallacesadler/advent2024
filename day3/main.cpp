@@ -4,18 +4,10 @@
 #include <fstream>
 #include <vector>
 
-struct Range
-{
-  int start;
-  int end;
-
-  Range(int s, int e) : start(s), end(e) {}
-};
-
 std::vector<std::string> split(const std::string& str, char delimiter);
 std::string getFileContents(const std::string& filename);
 int getProductSum(const std::string& fileContents); // Part 1
-int getCondtionalProductSum(const std::string& fileContents);
+int getCondtionalProductSum(const std::string& fileContents); // Part 2
 
 int main()
 {
@@ -30,7 +22,8 @@ int main()
 //  int productSum = getProductSum(fileContents);
   int productSum = getCondtionalProductSum(fileContents);
 
-  std::cout << "PRODUCT SUM: " << productSum << "\n"; 
+  std::cout << "PRODUCT SUM: " << productSum << "\n";
+
   return EXIT_SUCCESS;
 }
 
@@ -38,6 +31,7 @@ std::vector<std::string> split(const std::string& str, char delimiter)
 {
   std::string buildString;
   std::vector<std::string> results;
+
   for (int i = 0; i < str.length(); i++)
   {
     char currentChar = str[i];
@@ -51,10 +45,12 @@ std::vector<std::string> split(const std::string& str, char delimiter)
        buildString = buildString + currentChar;
     }
   }
+
   if (buildString.length() != 0)
   {
     results.push_back(buildString);
   }
+
   return results;
 }
 
@@ -98,25 +94,26 @@ int getProductSum(const std::string& fileContents)
   {
     std::smatch match = *i;
     std::string matchString = match.str();
+
     std::cout << matchString << "\n";
+
     // Know that the first 4 letters are mul( and last is ) -- so that is from 4 to length - 1
     std::string buildString;
     for (int j = 4; j < matchString.length() - 1; j++)
     {
       buildString = buildString + matchString[j]; 
     }
-    std::vector<std::string> nums = split(buildString, ',');
 
+    std::vector<std::string> nums = split(buildString, ',');
     for (int k = 0; k < nums.size(); k++)
     {
       std::cout << nums[k] << "\n";
     } 
-   
+
     int a = stoi(nums[0]);
     int b = stoi(nums[1]);
 
     productsSum = productsSum + (a * b);
-    
   }
 
   return productsSum;
@@ -129,6 +126,9 @@ int getCondtionalProductSum(const std::string& fileContents)
   std::regex doRegex("do\\(\\)");
   std::regex dontRegex("don't\\(\\)");
 
+  std::vector<int> doPositions;
+  std::vector<int> dontPositions;
+
   auto beginDo = std::sregex_iterator(fileContents.begin(), fileContents.end(), doRegex);
   auto endDo = std::sregex_iterator();
 
@@ -137,52 +137,18 @@ int getCondtionalProductSum(const std::string& fileContents)
   {
     std::smatch match = *i;
     std::cout << "FROM: " << match.position() << "\n";
+    doPositions.push_back(match.position());
   }
 
   auto beginDont = std::sregex_iterator(fileContents.begin(), fileContents.end(), dontRegex);
   auto endDont = std::sregex_iterator();
-
 
   std::cout << "Found " << std::distance(beginDont, endDont) << "Dont's\n";
   for (std::sregex_iterator i = beginDont; i != endDont; i++)
   {
     std::smatch match = *i;
     std::cout << "FROM: " << match.position() << "\n";
-  }
-
-  // Calculate valid ranges
-
-  std::vector<Range> validRanges;
-  std::smatch::difference_type lastDont;
-
-  std::smatch firstDont = *beginDont;
-  Range firstValidRange(0, firstDont.position());
-  lastDont = firstDont.position();
-  validRanges.push_back(firstValidRange);
-
-  for (std::sregex_iterator iter = beginDo; iter != endDo; iter++)
-  {
-    std::smatch doMatch = *iter;
-    int doStart = doMatch.position();
-
-    for (std::sregex_iterator noIter = beginDont; noIter != endDont; noIter++)
-    {
-      std::smatch dontMatch = *noIter;
-      int dontStart = dontMatch.position();
-
-      if (dontStart > lastDont && dontStart > doStart)
-      {
-        Range nextValidRange(doStart, dontStart);
-	validRanges.push_back(nextValidRange);
-	lastDont = dontStart;
-	break;
-      }
-    }
-  }
-
-  for (int i = 0; i < validRanges.size(); i++)
-  {
-    std::cout << validRanges[i].start << " , " << validRanges[i].end << "\n";
+    dontPositions.push_back(match.position());
   }
 
   auto begin = std::sregex_iterator(fileContents.begin(), fileContents.end(), mulRegex);
@@ -195,26 +161,35 @@ int getCondtionalProductSum(const std::string& fileContents)
   {
     std::smatch match = *i;
     int matchPosition = match.position();
-    bool isInValidRange = false;
 
-    // Guard that position is valid!
-    // THE BELOW WONT WORK!!!!!!!! ITS THE MOST RECENT THAT MATTERS!
+    int closestDont = 0;
+    int closestDo = 0;
     
-    // TODO: FIX RANGE SOLUTION!
-    // LOOK AT MATCH POSTION
-    // ITERATE DONTS FIND THE CLOSEST THAT IS LESS THAN
-    // ITERATE DOS FIND THE CLOSEST THAT IS LESS THAN
-    // IF DONT IS CLOSER JUST CONTINUE TO NEXT ITERATION!
-    for (Range range : validRanges)
+    for (int dontPosition : dontPositions)
     {
-      if (matchPosition > range.start && matchPosition < range.end) 
+      if (dontPosition > matchPosition)
       {
-        isInValidRange = true;
-	break;
+        break;
+      }
+      else 
+      {
+        closestDont = dontPosition;  
       }
     }
 
-    if (!isInValidRange)
+    for (int doPosition : doPositions)
+    {
+      if (doPosition > matchPosition)
+      {
+        break;
+      }
+      else 
+      {
+        closestDo = doPosition;  
+      }
+    }
+
+    if (closestDont > closestDo)
     {
       std::cout << "NOT IN VALID RANGE!! " << match.position() << "\n";
       continue;
