@@ -21,6 +21,14 @@ enum Direction
   UP, RIGHT, DOWN, LEFT
 };
 
+struct HitObsticle
+{
+  Position position;
+  Direction hitFromDirection;
+
+  HitObsticle(Position p, Direction d) : position(p), hitFromDirection(d) {}
+};
+
 class Guard
 {
   Direction mFaceDirection = Direction::UP;
@@ -80,7 +88,7 @@ bool guardIsExitingMap(const std::vector<std::string>& fileLines, const Guard& g
 
 int main()
 {
-  std::vector<std::string> fileLines = getFileLines("input.txt");
+  std::vector<std::string> fileLines = getFileLines("testInput.txt");
 
   if (fileLines.size() == 0)
   {
@@ -96,7 +104,7 @@ int main()
 
   Guard guard;
   std::vector<Position> uniquePositions;
-  std::vector<Position> lastObsticlePositions;
+  std::vector<HitObsticle> hitLoopObsticles;
   int obsticlesSeen = 0;
   int intersectionCount = 0;
 
@@ -178,31 +186,58 @@ int main()
     // Check last obsticles for loop point
     // Who am I passing on the right?
     // If its a third obisticle and I am passing it on the LEFT this is a point
-    for (Position obsticlePosition : lastObsticlePositions)
+    for (HitObsticle loopObsticle : hitLoopObsticles)
     {
       switch (guardDirection)
       {
         case LEFT:
-          if (nextJ == obsticlePosition.x && nextI > obsticlePosition.y)
+          if (loopObsticle.hitFromDirection == Direction::DOWN || loopObsticle.hitFromDirection == Direction::RIGHT)
           {
+            break;
+          }
+          if (nextJ == loopObsticle.position.x && nextI > loopObsticle.position.y)
+          {
+            std::cout << "------------------------ Intersection: " << nextI << " , " << nextJ << "\n";
+            std::cout << "Passing obsticle at " << loopObsticle.position.y << " , " << loopObsticle.position.x << "\n";
             intersectionCount++;
           }
           break;
         case RIGHT:
-          if (nextJ == obsticlePosition.x && nextI < obsticlePosition.y)
+          if (loopObsticle.hitFromDirection == Direction::UP || loopObsticle.hitFromDirection == Direction::LEFT)
           {
+            break;
+          }
+          if (nextJ == loopObsticle.position.x && nextI < loopObsticle.position.y)
+          {
+            
+            std::cout << "---------------------- Intersection: " << nextI << " , " << nextJ << "\n";
+            std::cout << "Passing obsticle at " << loopObsticle.position.y << " , " << loopObsticle.position.x << "\n";
             intersectionCount++;
           }
           break;
         case UP:
-          if (nextI == obsticlePosition.y && nextJ < obsticlePosition.x)
+          if (loopObsticle.hitFromDirection == Direction::DOWN || loopObsticle.hitFromDirection == Direction::LEFT)
           {
+            break;
+          }
+          if (nextI == loopObsticle.position.y && nextJ < loopObsticle.position.x)
+          {
+
+            std::cout << "--------------------- Intersection: " << nextI << " , " << nextJ << "\n";
+            std::cout << "Passing obsticle at " << loopObsticle.position.y << " , " << loopObsticle.position.x << "\n";
             intersectionCount++;
           }
           break;
         case DOWN:
-          if (nextI == obsticlePosition.y && nextJ > obsticlePosition.x)
+          if (loopObsticle.hitFromDirection == Direction::UP || loopObsticle.hitFromDirection == Direction::RIGHT)
           {
+            break;
+          }
+          if (nextI == loopObsticle.position.y && nextJ > loopObsticle.position.x)
+          {
+            
+            std::cout << "-------------------- Intersection: " << nextI << " , " << nextJ << "\n";
+            std::cout << "Passing obsticle at " << loopObsticle.position.y << " , " << loopObsticle.position.x << "\n";
             intersectionCount++;
           }
       }
@@ -217,11 +252,15 @@ int main()
     {
       std::cout << "HIT OBSTICLE: Turning right!!\n";
 
-      if (obsticlesSeen % 3 == 0)
-      {
+      //if (obsticlesSeen % 3 == 0)
+      //{
         Position obsticlePosition(nextJ, nextI);
-        lastObsticlePositions.push_back(obsticlePosition);
-      }
+        HitObsticle obsticle(obsticlePosition, guardDirection);
+
+      std::cout << "OBSTICLE AT: i " << nextI << ", j " << nextJ << "\n";
+
+        hitLoopObsticles.push_back(obsticle);
+      //}
 
       obsticlesSeen++;
 
