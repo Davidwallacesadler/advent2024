@@ -96,6 +96,9 @@ int main()
 
   Guard guard;
   std::vector<Position> uniquePositions;
+  std::vector<Position> lastObsticlePositions;
+  int obsticlesSeen = 0;
+  int intersectionCount = 0;
 
   // Setup the guard
   bool foundGuard = false;
@@ -111,9 +114,9 @@ int main()
       {
         Position guardStartPos(j, i);
         guard.setPosition(guardStartPos);
-	foundGuard = true;
-	fileLines[i][j] = '.';
-	break;
+      	foundGuard = true;
+      	fileLines[i][j] = '.';
+      	break;
       }
     }
   }
@@ -121,7 +124,6 @@ int main()
   // Walk the guard while not at the edge and looking off of it
   while (!guardIsExitingMap(fileLines, guard))
   {
-    // Traverse the guard
     Position guardPosition = guard.getPosition();
     Direction guardDirection = guard.getFaceDirection();
 
@@ -151,27 +153,60 @@ int main()
     {
       case UP:
         nextI = i - 1;
-	nextJ = j;
-	break;
+      	nextJ = j;
+      	break;
       
       case DOWN:
         nextI = i + 1;
-	nextJ = j;
-	break;
+      	nextJ = j;
+      	break;
 
       case LEFT:
         nextI = i;
-	nextJ = j - 1;
-	break;
+      	nextJ = j - 1;
+      	break;
         
       case RIGHT:
         nextI = i;
-	nextJ = j + 1;
+      	nextJ = j + 1;
     }
 
     char nextTile = fileLines[nextI][nextJ];
 
     std::cout << "NEXT POSITION: i " << nextI << " , j: " << nextJ << ". Char: " << nextTile << "\n"; 
+
+    // Check last obsticles for loop point
+    // Who am I passing on the right?
+    // If its a third obisticle and I am passing it on the LEFT this is a point
+    for (Position obsticlePosition : lastObsticlePositions)
+    {
+      switch (guardDirection)
+      {
+        case LEFT:
+          if (nextJ == obsticlePosition.x && nextI > obsticlePosition.y)
+          {
+            intersectionCount++;
+          }
+          break;
+        case RIGHT:
+          if (nextJ == obsticlePosition.x && nextI < obsticlePosition.y)
+          {
+            intersectionCount++;
+          }
+          break;
+        case UP:
+          if (nextI == obsticlePosition.y && nextJ < obsticlePosition.x)
+          {
+            intersectionCount++;
+          }
+          break;
+        case DOWN:
+          if (nextI == obsticlePosition.y && nextJ > obsticlePosition.x)
+          {
+            intersectionCount++;
+          }
+      }
+    }
 
     if (nextTile == '.')
     {
@@ -180,12 +215,22 @@ int main()
     }
     else
     {
-      std::cout << "Turning right!!\n";
+      std::cout << "HIT OBSTICLE: Turning right!!\n";
+
+      if (obsticlesSeen % 3 == 0)
+      {
+        Position obsticlePosition(nextJ, nextI);
+        lastObsticlePositions.push_back(obsticlePosition);
+      }
+
+      obsticlesSeen++;
+
       guard.turnRight();
     }
   }
 
-  std::cout << "UNIQUE POSITIONS: " << uniquePositions.size();
+  std::cout << "UNIQUE POSITIONS: " << uniquePositions.size() << "\n";
+  std::cout << "INTERSECTION COUNT: " << intersectionCount << "\n";
 
   return EXIT_SUCCESS;
 }
