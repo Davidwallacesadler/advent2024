@@ -28,11 +28,13 @@ struct Position
 };
 
 std::vector<std::string> getFileLines(const std::string& filename);
+bool isPositionOnMap(int maxX, int maxY, Position pos);
 
 int main()
 {
   std::vector<std::string> fileLines = getFileLines("input.txt");
   std::map<char, std::vector<Position> > antaneaToPositions;
+  std::vector<Position> uniquePositions;
 
   for (int i = 0; i < fileLines.size(); i++)
   {
@@ -44,6 +46,8 @@ int main()
       if (currentChar != '.')
       {
         // This is an antanea
+	uniquePositions.push_back(currentPosition); // For Part 2
+
         if (antaneaToPositions.count(currentChar) == 1)
         {
           antaneaToPositions[currentChar].push_back(currentPosition);
@@ -58,15 +62,11 @@ int main()
     }
   }
 
-
   // So we want to look at all antaneas of the same type'
   // For each look at every other and use rise/run to determine where antinode will go based on this
 
   int maxX = fileLines[0].length();
   int maxY = fileLines.size();
-
-
-  std::vector<Position> uniquePositions;
 
   for (std::map<char, std::vector<Position> >::iterator it = antaneaToPositions.begin(); it != antaneaToPositions.end(); it++)
   {
@@ -90,15 +90,10 @@ int main()
 	std::cout << "RISE: " << delta.y << " RUN: " << delta.x << "\n";
 
 	// Apply rise and run to i and see if its in the bounds
+
 	Position posA = positions[i] + delta;
-	Position posB = positions[currentPositionIndex] - delta;
-
-	std::cout << "ANTINODE A AT: " << posA.x << " , " << posA.y << "\n";
-	std::cout << "ANTINODE B AT: " << posB.x << " , " << posB.y << "\n";
-
-	if (posA.x >= 0 && posA.x < maxX && posA.y >= 0 && posA.y < maxY)
+	while (isPositionOnMap(maxX, maxY, posA))
 	{
-	  // posA is on the board!
 	  std::cout << "POS A ON THE BOARD!\n";
 
 	  bool isAdded = false;
@@ -114,13 +109,13 @@ int main()
 	    uniquePositions.push_back(posA);
 	  }
 
+	  posA = posA + delta;
 	}
 
-	if (posB.x >= 0 && posB.x < maxX && posB.y >= 0 && posB.y < maxY)
+	Position posB = positions[currentPositionIndex] - delta;
+	while (isPositionOnMap(maxX, maxY, posB))
 	{
-	  // posB is on the board!
 	  std::cout << "POS B ON THE BOARD!\n";
-
 
 	  bool isAdded = false;
 	  for (Position pos : uniquePositions)
@@ -134,14 +129,16 @@ int main()
 	  {
 	    uniquePositions.push_back(posB);
 	  }
+
+	  posB = posB - delta;
 	}
       }
+
       currentPositionIndex++;
     }
   }
 
   std::cout << "UNIQUE POSITIONS: " << uniquePositions.size() << "\n";
-
 
   return EXIT_SUCCESS;
 }
@@ -165,4 +162,9 @@ std::vector<std::string> getFileLines(const std::string& filename)
   }
 
   return results;
+}
+
+bool isPositionOnMap(int maxX, int maxY, Position pos)
+{
+  return pos.x >= 0 && pos.x < maxX && pos.y >= 0 && pos.y < maxY;
 }
