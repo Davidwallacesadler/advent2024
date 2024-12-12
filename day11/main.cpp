@@ -17,7 +17,7 @@ int main()
 
   // How many stones do we have when we blink 25 times?
   //std::vector<long> stones = {125, 17};
-  std::vector<long> stones = {5688, 62084, 2, 3248809, 179, 79, 0, 172169};
+  std::vector<long long> stones = {5688, 62084, 2, 3248809, 179, 79, 0, 172169};
 
   int blinkCount = 25;
 
@@ -60,7 +60,7 @@ int main()
 	std::cout << "LHS: " << lhs << "\n";
 	std::cout << "RHS: " << rhs << "\n";
 
-	std::vector<int> everythingAfter;
+	std::vector<long long> everythingAfter;
 
 	std::cout << "EVERYTHING AFTER: \n";
 
