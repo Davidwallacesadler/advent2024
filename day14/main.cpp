@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <string>
+#include <fstream>
 
 struct Vector2
 {
@@ -24,11 +26,81 @@ struct Entity
   Vector2 position;
   Vector2 velocity;
 
+  Entity(): position(), velocity() {}
   Entity(Vector2 pos, Vector2 vel): position(pos), velocity(vel) {}
+
+  void print() const
+  {
+    std::cout << "P: ";
+    this->position.print();
+    std::cout << "V: ";
+    this->velocity.print();
+  }
 };
+
+std::vector<std::string> getFileLines(const std::string& filename);
 
 int main()
 {
+  std::string filename = "input.txt";
+  std::vector<std::string> fileLines = getFileLines(filename);
+
+  if (fileLines.size() == 0)
+  {
+    std::cout << "NO INPUT FOUND FOR " << filename << "\n";
+    return -1;
+  }
+
+  std::vector<Entity> entities;
+
+  for (int i = 0; i < fileLines.size(); i++)
+  {
+    std::string line = fileLines[i];
+
+    Entity newEntity;
+    std::string buildString;
+    bool settingUpPos = true;
+
+    for (int j = 2; j < line.length(); j++)
+    {
+      char c = line[j];
+
+      if (c == ',')
+      {
+        if (settingUpPos)
+	{
+          newEntity.position.x = stoi(buildString);
+	}
+	else
+	{
+	  newEntity.velocity.x = stoi(buildString);
+	}
+	buildString = "";
+	continue;
+      }
+
+      if (c == ' ')
+      {
+        newEntity.position.y = stoi(buildString);
+	settingUpPos = false;
+
+	buildString = "";
+	j = j + 2;
+	continue;
+      }
+
+      buildString = buildString + c;
+    }
+
+    newEntity.velocity.y = stoi(buildString);
+
+    newEntity.print();
+    std::cout << "\n";
+
+    entities.push_back(newEntity);
+  }
+
+
   // Given a list of positions and velocities -- simulate steps
   // When hitting a wall we just warp --  new Position = velocity applied mod maxX, mod maxY
   // Need to simulate 100 steps
@@ -37,15 +109,21 @@ int main()
   // Split into quadrants - discarding middle positions
   // Count number of positions in each quadrant and multiply
 
-  int maxX = 11; //101;
-  int maxY = 7; //103;
+  int maxX = 101;
+  int maxY = 103;
 
-  std::vector<Entity> entities;
+  int midX = (maxX - 1) / 2;
+  int midY = (maxY - 1) / 2;
+
+  std::cout << "MAP SIZE: X " << maxX << " Y " << maxY << "\n";
+  std::cout << "MID: X " << midX << " Y " << midY << "\n";
+
+  //  std::vector<Entity> entities;
 
   // Test to match example
-  entities.push_back(Entity(Vector2(2, 4), Vector2(2, -3)));
+  //  entities.push_back(Entity(Vector2(2, 4), Vector2(2, -3)));
 
-  int maxStepCount = 5;
+  int maxStepCount = 100;
 
   for (int i = 0; i < maxStepCount; i++)
   {
@@ -64,7 +142,7 @@ int main()
       {
         newPosition.x = maxX + newPosition.x;
       } 
-      else if (newPosition.x > maxX)
+      else if (newPosition.x >= maxX)
       {
         newPosition.x = newPosition.x % maxX;
       }
@@ -73,7 +151,7 @@ int main()
       {
         newPosition.y = maxY + newPosition.y;
       }
-      else if (newPosition.y > maxY)
+      else if (newPosition.y >= maxY)
       {
         newPosition.y = newPosition.y % maxY;
       }
@@ -90,9 +168,6 @@ int main()
   int topRhPositions = 0;
   int botLhPositions = 0;
   int botRhPositions = 0;
-
-  int midX = (maxX - 1) / 2;
-  int midY = (maxY - 1) / 2;
 
   Vector2 midPosition(midX, midY);
 
@@ -131,5 +206,27 @@ int main()
   std::cout << "BOT LH: " << botLhPositions << "\n";
   std::cout << "BOT RH: " << botRhPositions << "\n";
 
+  long safetyScore = topLhPositions * topRhPositions * botLhPositions * botRhPositions;
 
+  std::cout << "SAFEFY SCORE: " << safetyScore << "\n";
+}
+
+std::vector<std::string> getFileLines(const std::string& filename)
+{
+  std::ifstream file(filename);
+  std::vector<std::string> results;
+
+  if (!file)
+  {
+    return results;
+  }
+
+  std::string currentLine;
+  while(std::getline(file, currentLine))
+  {
+    std::cout << currentLine << "\n";
+    results.push_back(currentLine);
+  }
+  
+  return results;
 }
