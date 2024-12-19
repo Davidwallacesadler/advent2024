@@ -231,9 +231,6 @@ int main()
 
    std::cout << "GPS SUM: " << gpsSum << "\n";
 
-     
-
-
 }
 
 std::vector<std::string> getFileLines(const std::string& filename)
